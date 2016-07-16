@@ -2,11 +2,11 @@
 *.bin
 *.elf
 *.iso
+*.a
 
 # qemu traces
 trace-*
-target
-Cargo.lock
 
 # cargo
 target
+Cargo.lock

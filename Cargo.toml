@@ -1,0 +1,12 @@
+[package]
+name = "rite"
+version = "0.1.0"
+authors = ["SplittyDev <splittydev@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.release]
+panic = "abort"
+
+[dependencies]

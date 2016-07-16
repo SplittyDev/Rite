@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
 function ri_setup {
+  # Rite kernel name
+  export ri_kernel="rite"
   # Rite ISO directory
   export ri_isodir="iso"
   # Rite ISO boot directory
   export ri_bootdir="iso/boot"
   # Rite assembly directory
   export ri_asmdir="src/asm"
+  # Rite Cargo target
+  export ri_target_triple="x86_64-unknown-rite-gnu"
+  # Rust libcore location
+  export ri_libcore="libcore"
 }
 
 function ri_assemble {
@@ -35,10 +41,11 @@ function ri_assemble {
 function ri_link {
   printf "Linking (\n"
   for fobj in $*; do
-    mv "$ri_asmdir/$fobj" "./"
+    mv "$ri_asmdir/$fobj" "./" &>/dev/null
     printf "  [ ?? ] $fobj\n"
   done
   printf ") "
+  cp "target/$ri_target_triple/release/lib$ri_kernel.a" "./" &>/dev/null
   if ! ld --nmagic --output=kernel.elf --script=linker.ld $*; then
     printf "[FAIL]\n"
     exit 2
@@ -56,10 +63,21 @@ function ri_verify-multiboot2 {
   fi
 }
 
+function ri_build-kernel {
+  printf "Compiling kernel... "
+  export RUSTFLAGS="-L $ri_libcore/target/$ri_target_triple/release"
+  if ! cargo build --release \
+    --target $ri_target_triple.json &>/dev/null; then
+    printf "FAIL\n"
+    exit 5
+  fi
+  printf "OK\n"
+}
+
 function ri_build-iso {
-  printf "Creating Rite ISO image... "
+  printf "Creating $ri_kernel ISO image... "
   cp kernel.elf "$ri_bootdir"
-  if grub-mkrescue -o rite.iso "$ri_isodir" &>/dev/null; then
+  if grub-mkrescue -o $ri_kernel.iso "$ri_isodir" &>/dev/null; then
     printf "OK\n"
   else
     printf "FAIL\n"
@@ -77,9 +95,11 @@ function compile {
   ri_assemble \
     "multiboot.asm" \
     "boot.asm"
+  ri_build-kernel
   ri_link \
     "multiboot.o" \
-    "boot.o"
+    "boot.o" \
+    "lib$ri_kernel.a"
   ri_verify-multiboot2
   ri_build-iso
   ri_post-cleanup

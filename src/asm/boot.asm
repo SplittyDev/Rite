@@ -1,4 +1,5 @@
 global real_mode_start
+extern kmain
 
 ; Real mode text section
 section .text
@@ -58,15 +59,7 @@ setup_gdt64:
   mov ds, ax
   mov es, ax
   ; Far jump into long mode
-  jmp gdt64.code:long_mode_start
-
-; Long mode text section
-section .text
-bits 64
-
-; Long mode entry point
-long_mode_start:
-  hlt
+  jmp gdt64.code:kmain
 
 section .bss
 page_map_level4_table:
