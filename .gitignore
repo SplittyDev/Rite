@@ -1,0 +1,7 @@
+# binaries
+*.bin
+*.elf
+*.iso
+
+# qemu traces
+trace-*
