@@ -5,3 +5,8 @@
 
 # qemu traces
 trace-*
+target
+Cargo.lock
+
+# cargo
+target
