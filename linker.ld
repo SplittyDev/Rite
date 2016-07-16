@@ -1,4 +1,4 @@
-ENTRY(start)
+ENTRY(real_mode_start)
 
 SECTIONS {
   . = 1M;
