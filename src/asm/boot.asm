@@ -2,6 +2,7 @@ global start
 
 section .text
 bits 32
+
 start:
   call setup_paging
   lgdt [gdt64.pointer]
@@ -60,9 +61,6 @@ setup_paging:
   ret
 
 section .bss
-align 4096
-
-; Paging stuff
 page_map_level4_table:
   resb 4096
 page_directory_pointer_table:
@@ -77,6 +75,7 @@ GDT_BIT_EXECUTABLE  equ 43
 GDT_BIT_TYPE        equ 44
 GDT_BIT_PRESENT     equ 47
 GDT_BIT_LONG        equ 53
+
 ; Global Descriptor Table
 gdt64:
   ; Zero segment

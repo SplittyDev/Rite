@@ -10,4 +10,8 @@ SECTIONS {
   .text : {
     *(.text)
   }
+
+  .bss : ALIGN(4096) {
+    *(.bss)
+  }
 }
