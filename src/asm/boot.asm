@@ -7,6 +7,7 @@ bits 32
 
 ; Real mode entry point
 real_mode_start:
+  mov esp, stack_top
   call setup_paging
   lgdt [gdt64.pointer]
   jmp setup_gdt64
@@ -62,12 +63,18 @@ setup_gdt64:
   jmp gdt64.code:kmain
 
 section .bss
+align 4096
+
 page_map_level4_table:
   resb 4096
 page_directory_pointer_table:
   resb 4096
 page_directory_table:
   resb 4096
+
+stack_bottom:
+  resb 256
+stack_top:
 
 section .rodata
 ; Defines
