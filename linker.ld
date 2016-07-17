@@ -4,14 +4,22 @@ SECTIONS {
   . = 1M;
 
   .boot : {
-    *(.multiboot)
+    KEEP(*(.multiboot))
   }
 
   .text : {
-    *(.text)
+    *(.text .text.*)
   }
 
-  .bss : ALIGN(4096) {
+  .bss : {
     *(.bss)
+  }
+
+  .rodata : {
+    *(.rodata .rodata.*)
+  }
+
+  .data.rel.ro : {
+    *(.data.rel.ro.local*) *(.data.rel.ro .data.rel.ro.*)
   }
 }
