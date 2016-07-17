@@ -17,10 +17,13 @@ use vga::{Console, Color, HalfColor};
 extern "C" fn eh_personality() {}
 
 #[lang = "panic_fmt"]
-extern "C" fn rust_begin_panic() -> ! {
+extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     Console.lock().set_cursor(0, 0);
     Console.lock().set_color(Color::new(HalfColor::LightRed, HalfColor::Black));
-    println!("*** KERNEL PANIC");
+    println!("***\tKERNEL PANIC\n\tin {} at line {}:\n\t{}",
+             file,
+             line,
+             fmt);
     loop {}
 }
 
@@ -35,6 +38,7 @@ pub extern "C" fn kmain_setup(multiboot2_addr: usize) {
                  area.base_addr,
                  area.length);
     }
+    let i = 1 / 0;
 }
 
 #[no_mangle]

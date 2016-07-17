@@ -29,7 +29,7 @@ const BUFFER_WIDTH: usize = 80;
 const BUFFER_HEIGHT: usize = 25;
 
 /// The tab width.
-const TAB_WIDTH: usize = 2;
+const TAB_WIDTH: usize = 4;
 
 /// The `HalfColor` type.
 ///
