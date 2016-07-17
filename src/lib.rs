@@ -30,15 +30,24 @@ extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
 #[no_mangle]
 pub extern "C" fn kmain_setup(multiboot2_addr: usize) {
     Console.lock().clear_screen();
+
     let boot_info = unsafe { multiboot2::load(multiboot2_addr) };
     let memory_map = boot_info.memory_map_tag().unwrap();
     println!("Memory areas:");
     for area in memory_map.memory_areas() {
-        println!("\tstart: 0x{:x}, length: 0x{:x}",
+        println!("\tStart: 0x{:x}; Length: 0x{:x}",
                  area.base_addr,
                  area.length);
     }
-    let i = 1 / 0;
+
+    let elf_sections = boot_info.elf_sections_tag().unwrap();
+    println!("Kernel sections:");
+    for section in elf_sections.sections() {
+        println!("\tAddr: 0x{:x}; Size: 0x{:x}; Flags: 0x{:x}",
+                 section.addr,
+                 section.size,
+                 section.flags);
+    }
 }
 
 #[no_mangle]
