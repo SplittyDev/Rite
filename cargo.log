@@ -1,0 +1,29 @@
+   Compiling rite v0.1.0 (file:///mnt/f/Documents/GitHub/Rite)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+'x86_64' is not a recognized processor for this target (ignoring processor)
+src/vga.rs:142:13: 142:17 error: cannot borrow `*self` as mutable more than once at a time [E0499]
+src/vga.rs:142             self.clear_row(BUFFER_HEIGHT - 1);
+                           ^~~~
+src/vga.rs:138:23: 138:27 note: first mutable borrow occurs here
+src/vga.rs:138             let buf = self.buffer();
+                                     ^~~~
+src/vga.rs:144:9: 144:10 note: first borrow ends here
+src/vga.rs:144         }
+                       ^
+src/vga.rs:142:13: 142:17 help: run `rustc --explain E0499` to see a detailed explanation
+src/vga.rs:143:13: 143:25 error: cannot assign to `self.col` because it is borrowed [E0506]
+src/vga.rs:143             self.col = 0;
+                           ^~~~~~~~~~~~
+src/vga.rs:138:23: 138:27 note: borrow of `self.col` occurs here
+src/vga.rs:138             let buf = self.buffer();
+                                     ^~~~
+src/vga.rs:143:13: 143:25 help: run `rustc --explain E0506` to see a detailed explanation
+error: aborting due to 2 previous errors
+error: Could not compile `rite`.
+
+To learn more, run the command again with --verbose.

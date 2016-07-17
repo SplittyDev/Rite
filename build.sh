@@ -69,6 +69,7 @@ function ri_build-kernel {
   if ! cargo build --release \
     --target $ri_target_triple.json &>/dev/null; then
     printf "FAIL\n"
+    cargo build --release --target $ri_target_triple.json
     exit 5
   fi
   printf "OK\n"
