@@ -28,5 +28,5 @@ align 4096
 
 ; Bootstrap stack
 stack_bottom:
-  resb 256
+  resb 4096
 stack_top:
