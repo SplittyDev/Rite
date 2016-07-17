@@ -1,5 +1,6 @@
 section .multiboot
 mb_start:
+
   ; Defines
   MB_MAGIC    equ 0xe85250d6
   MB_ARCH     equ 0
@@ -8,6 +9,7 @@ mb_start:
   MB_TYPE     equ 0
   MB_FLAGS    equ 0
   MB_SIZE     equ 8
+
   ; Memory layout
   dd MB_MAGIC
   dd MB_ARCH
