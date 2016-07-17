@@ -11,7 +11,7 @@ enter_long_mode:
   mov es, ax
 
   ; Far jump into long mode
-  jmp gdt64.code:kmain
+  jmp gdt64.code:long_mode_start
 
 section .rodata
 

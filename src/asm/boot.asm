@@ -1,4 +1,5 @@
 global real_mode_start
+extern kmain_setup
 extern kmain
 
 %include "paging.asm"
@@ -25,6 +26,29 @@ real_mode_start:
 
   ; Jump into long mode
   jmp enter_long_mode
+
+; Long mode text section
+section .text
+bits 64
+
+; Long mode entry point
+long_mode_start:
+
+  ; Disable interrupts for now
+  cli
+
+  ; Call the kernel setup
+  call kmain_setup
+
+  ; Enable interrupts
+  sti
+
+  ; Call the kernel
+  call kmain
+
+  ; Disable interrupts and halt
+  cli
+  hlt
 
 section .bss
 align 4096
