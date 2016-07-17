@@ -10,3 +10,6 @@ trace-*
 # cargo
 target
 Cargo.lock
+
+# logs
+*.log
