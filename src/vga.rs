@@ -120,7 +120,7 @@ impl Writer {
             b'\r' => self.col = 0,
             b'\t' => {
                 for _ in 0..(TAB_WIDTH - (self.col % TAB_WIDTH)) {
-                    print!(" ");
+                    self.write_byte(b' ');
                 }
             }
             0x08 => {
