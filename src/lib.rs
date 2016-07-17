@@ -20,7 +20,6 @@ extern "C" fn rust_begin_panic() -> ! {
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
     vga::Console.lock().clear_screen();
-    print!("\n");
-    print!("=> Hello from Rite!");
+    println!("Hello from Rite!");
     loop {}
 }

@@ -23,10 +23,10 @@ pub static Console: Mutex<Writer> = Mutex::new(Writer {
 });
 
 /// The buffer width.
-const BUFFER_WIDTH: usize = 25;
+const BUFFER_WIDTH: usize = 80;
 
 /// The buffer height.
-const BUFFER_HEIGHT: usize = 80;
+const BUFFER_HEIGHT: usize = 25;
 
 /// The tab width.
 const TAB_WIDTH: usize = 2;
