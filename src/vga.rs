@@ -57,12 +57,12 @@ pub enum HalfColor {
 
 /// The `Color` type.
 #[derive(Copy, Clone)]
-struct Color(u8);
+pub struct Color(u8);
 
 /// The `Color` implementation.
 impl Color {
     /// Constructs a new `Color`.
-    const fn new(foreground: HalfColor, background: HalfColor) -> Color {
+    pub const fn new(foreground: HalfColor, background: HalfColor) -> Color {
         Color((background as u8) << 4 | (foreground as u8))
     }
 }
@@ -153,6 +153,14 @@ impl Writer {
         }
     }
 
+    /// Writes a string.
+    #[inline(always)]
+    pub fn write_str(&mut self, string: &str) {
+        for byte in string.bytes() {
+            self.write_byte(byte)
+        }
+    }
+
     /// Clears the screen.
     ///
     /// Also properly fills the screen with the current color.
@@ -172,6 +180,30 @@ impl Writer {
         }
     }
 
+    /// Sets the cursor to the specified position.
+    #[inline(always)]
+    pub fn set_cursor(&mut self, x: usize, y: usize) {
+        fn clamp(value: usize, min: usize, max: usize) -> usize {
+            return if value < min {
+                min
+            } else {
+                if value > max {
+                    max
+                } else {
+                    value
+                }
+            };
+        }
+        self.col = clamp(x, 0, BUFFER_WIDTH);
+        self.row = clamp(y, 0, BUFFER_HEIGHT);
+    }
+
+    /// Sets the foreground and background color.
+    #[inline(always)]
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color;
+    }
+
     /// Starts a new line.
     #[inline(always)]
     fn new_line(&mut self) {
@@ -183,7 +215,7 @@ impl Writer {
         }
     }
 
-    /// Scrolls up by one line.
+    /// Scrolls up by one line and clears the last line.
     #[inline(always)]
     fn scroll(&mut self) {
         let blank = Character {
