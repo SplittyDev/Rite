@@ -91,6 +91,12 @@ function ri_post-cleanup {
   rm trace-* &>/dev/null
 }
 
+function ri_update-build-number {
+  build_num=$(cat build.txt)
+  build_num=$((build_num+1))
+  echo $build_num >build.txt
+}
+
 function compile {
   ri_setup
   ri_assemble \
@@ -104,6 +110,7 @@ function compile {
   ri_verify-multiboot2
   ri_build-iso
   ri_post-cleanup
+  ri_update-build-number
 }
 
 compile

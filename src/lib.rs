@@ -20,6 +20,6 @@ extern "C" fn rust_begin_panic() -> ! {
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
     vga::Console.lock().clear_screen();
-    println!("Hello from Rite!");
+    println!("Rite OS (v{major}.{minor})", major = 1, minor = 0);
     loop {}
 }
