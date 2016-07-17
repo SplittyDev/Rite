@@ -6,6 +6,9 @@
 extern crate rlibc;
 extern crate spin;
 
+// TODO: Replace this with a proper multiboot2 module
+extern crate multiboot2;
+
 #[macro_use]
 mod vga;
 
@@ -18,8 +21,18 @@ extern "C" fn rust_begin_panic() -> ! {
 }
 
 #[no_mangle]
-pub extern "C" fn kmain() -> ! {
+pub extern "C" fn kmain(multiboot2_addr: usize) -> ! {
     vga::Console.lock().clear_screen();
     println!("Rite OS (v{major}.{minor})", major = 1, minor = 0);
+
+    let boot_info = unsafe { multiboot2::load(multiboot2_addr) };
+    let memory_map = boot_info.memory_map_tag().unwrap();
+    println!("Memory areas:");
+    for area in memory_map.memory_areas() {
+        println!("\tstart: 0x{:x}, length: 0x{:x}",
+                 area.base_addr,
+                 area.length);
+    }
+
     loop {}
 }

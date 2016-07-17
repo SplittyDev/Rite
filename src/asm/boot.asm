@@ -14,6 +14,9 @@ real_mode_start:
   ; Point stack pointer to stack
   mov esp, stack_top
 
+  ; Load the multiboot info pointer
+  mov edi, ebx
+
   ; Set paging up
   call setup_paging
 
