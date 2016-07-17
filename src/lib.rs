@@ -32,6 +32,7 @@ pub extern "C" fn kmain_setup(multiboot2_addr: usize) {
     Console.lock().clear_screen();
 
     let boot_info = unsafe { multiboot2::load(multiboot2_addr) };
+
     let memory_map = boot_info.memory_map_tag().unwrap();
     println!("Memory areas:");
     for area in memory_map.memory_areas() {
@@ -48,6 +49,17 @@ pub extern "C" fn kmain_setup(multiboot2_addr: usize) {
                  section.size,
                  section.flags);
     }
+
+    let kernel_start = elf_sections.sections().map(|s| s.addr).min().unwrap();
+    let kernel_end = elf_sections.sections().map(|s| s.addr + s.size).max().unwrap();
+    let mb2_start = multiboot2_addr;
+    let mb2_end = mb2_start + (boot_info.total_size as usize);
+    println!("Kernel start: 0x{:x}\nKernel end: 0x{:x}",
+             kernel_start,
+             kernel_end);
+    println!("Multiboot2 start: 0x{:x}\nMultiboot2 end: 0x{:x}",
+             mb2_start,
+             mb2_end);
 }
 
 #[no_mangle]
