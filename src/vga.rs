@@ -180,27 +180,21 @@ impl Writer {
             self.row += 1;
         } else {
             self.scroll();
-            self.clear_row(BUFFER_HEIGHT - 1);
         }
     }
 
     /// Scrolls up by one line.
     #[inline(always)]
     fn scroll(&mut self) {
-        let buf = self.buffer();
-        for row in 0..(BUFFER_HEIGHT - 1) {
-            buf.chars[row] = buf.chars[row + 1];
-        }
-    }
-
-    /// Clears the specified row.
-    #[inline(always)]
-    fn clear_row(&mut self, row: usize) {
         let blank = Character {
             char_code: b' ',
             color: self.color,
         };
-        self.buffer().chars[row] = [blank; BUFFER_WIDTH];
+        let buf = self.buffer();
+        for row in 0..(BUFFER_HEIGHT - 1) {
+            buf.chars[row] = buf.chars[row + 1];
+        }
+        buf.chars[BUFFER_HEIGHT - 1] = [blank; BUFFER_WIDTH];
     }
 
     /// Gets a mutable reference to the buffer.
