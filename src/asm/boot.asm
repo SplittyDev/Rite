@@ -24,6 +24,11 @@ real_mode_start:
   ; Set paging up
   call setup_paging
 
+  ; Map the P4 table
+  mov eax, page_map_level4_table
+  or eax, 0b11
+  mov [page_map_level4_table + 511 * 8], eax
+
   ; Load the global descriptor table
   lgdt [gdt64.pointer]
 

@@ -3,6 +3,8 @@ pub const PAGE_SIZE: usize = 4096;
 
 mod area_alloc;
 pub use self::area_alloc::AreaFrameAllocator;
+mod paging;
+use self::paging::PhysicalAddress;
 
 /// The `Frame` type.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -22,6 +24,16 @@ impl Frame {
     /// the specified physical address.
     fn get_frame_for_address(addr: usize) -> Frame {
         Frame { index: addr / PAGE_SIZE }
+    }
+
+    /// Gets the start address of the frame.
+    ///
+    /// Calculated in the following way:
+    /// ```
+    /// addr = index * PAGE_SIZE
+    /// ```
+    fn get_start_address(&self) -> PhysicalAddress {
+        self.index * PAGE_SIZE
     }
 }
 
