@@ -12,6 +12,9 @@ bits 32
 ; Real mode entry point
 real_mode_start:
 
+  ; Disable interrupts
+  cli
+
   ; Point stack pointer to stack
   mov esp, stack_top
 
@@ -34,14 +37,8 @@ bits 64
 ; Long mode entry point
 long_mode_start:
 
-  ; Disable interrupts for now
-  cli
-
   ; Call the kernel setup
   call kmain_setup
-
-  ; Enable interrupts
-  sti
 
   ; Call the kernel
   call kmain

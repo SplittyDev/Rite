@@ -12,6 +12,8 @@ extern crate multiboot2;
 #[macro_use]
 mod vga;
 use vga::{Console, Color, HalfColor};
+mod memory;
+use memory::FrameAllocator;
 
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
@@ -60,9 +62,28 @@ pub extern "C" fn kmain_setup(multiboot2_addr: usize) {
     println!("Multiboot2 start: 0x{:x}\nMultiboot2 end: 0x{:x}",
              mb2_start,
              mb2_end);
+
+    println!("Running paging tests...");
+    let mut frame_allocator = memory::AreaFrameAllocator::new(kernel_start as usize,
+                                                              kernel_end as usize,
+                                                              mb2_start as usize,
+                                                              mb2_end as usize,
+                                                              memory_map.memory_areas());
+    for i in 0..10 {
+        match frame_allocator.alloc_frame() {
+            Some(frame) => println!("Allocated frame: {}", frame.index),
+            None => (),
+        }
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn kmain() {
+pub extern "C" fn kmain() -> ! {
     println!("Hello from Rite!");
+    println!("Hello from Rite!");
+    println!("Hello from Rite!");
+    println!("Hello from Rite!");
+    println!("Hello from Rite!");
+    println!("Hello from Rite!");
+    loop {}
 }

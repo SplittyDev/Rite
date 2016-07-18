@@ -222,11 +222,12 @@ impl Writer {
             char_code: b' ',
             color: self.color,
         };
-        let buf = self.buffer();
-        for row in 0..(BUFFER_HEIGHT - 1) {
-            buf.chars[row] = buf.chars[row + 1];
+        for y in 0..(BUFFER_HEIGHT - 1) {
+            for x in 0..BUFFER_WIDTH {
+                self.buffer().chars[y][x] = self.buffer().chars[y + 1][x];
+            }
         }
-        buf.chars[BUFFER_HEIGHT - 1] = [blank; BUFFER_WIDTH];
+        self.buffer().chars[BUFFER_HEIGHT - 1] = [blank; BUFFER_WIDTH];
     }
 
     /// Gets a mutable reference to the buffer.
