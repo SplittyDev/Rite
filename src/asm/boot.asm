@@ -40,8 +40,8 @@ long_mode_start:
   ; Call the kernel setup
   call kmain_setup
 
-  ; Call the kernel
-  call kmain
+  ; Jumo into the kernel
+  jmp kmain
 
   ; Disable interrupts and halt
   cli
