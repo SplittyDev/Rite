@@ -26,6 +26,11 @@ impl Frame {
         Frame { index: addr / PAGE_SIZE }
     }
 
+    /// Clones the frame.
+    fn clone(&self) -> Frame {
+        Frame { index: self.index }
+    }
+
     /// Gets the start address of the frame.
     ///
     /// Calculated in the following way:

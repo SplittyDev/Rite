@@ -1,12 +1,19 @@
 use core::ptr::Unique;
+use core::ops::{Deref, DerefMut};
 
+mod mapper;
 mod entry;
 mod table;
+mod temp_page;
 
 pub use self::entry::*;
+pub use self::table::{Level1, Table};
+
 use super::{Frame, PAGE_SIZE};
 use super::FrameAllocator;
-use self::table::{Table, Level4, LEVEL4_TABLE};
+use self::table::{Level4, LEVEL4_TABLE};
+use self::temp_page::TemporaryPage;
+use self::mapper::Mapper;
 
 /// The number of entries.
 const ENTRY_COUNT: usize = 512;
@@ -19,92 +26,90 @@ pub type VirtualAddress = usize;
 
 /// The `ActivePageTable` type.
 pub struct ActivePageTable {
-    /// The level4 page table.
-    p4: Unique<Table<Level4>>,
+    /// The mapper.
+    mapper: Mapper,
+}
+
+/// The `Deref` implementation for `ActivePageTable`.
+impl Deref for ActivePageTable {
+    /// The target.
+    type Target = Mapper;
+
+    /// Dereferences the `ActivePageTable` into `Mapper`.
+    fn deref(&self) -> &Mapper {
+        &self.mapper
+    }
+}
+
+/// The `DerefMut` implementation for `ActivePageTable`.
+impl DerefMut for ActivePageTable {
+    /// Dereferences the `ActivePageTable` into mutable `Mapper`.
+    fn deref_mut(&mut self) -> &mut Mapper {
+        &mut self.mapper
+    }
 }
 
 /// The `ActivePageTable` implementation.
 impl ActivePageTable {
     /// Constructs a new `ActivePageTable`.
-    pub unsafe fn new() -> ActivePageTable {
-        ActivePageTable { p4: Unique::new(table::LEVEL4_TABLE) }
+    unsafe fn new() -> ActivePageTable {
+        ActivePageTable { mapper: Mapper::new() }
     }
 
-    /// Gets the level4 page table.
-    fn p4(&self) -> &Table<Level4> {
-        unsafe { self.p4.get() }
-    }
-
-    /// Gets the level4 page table as mutable.
-    fn p4_mut(&mut self) -> &mut Table<Level4> {
-        unsafe { self.p4.get_mut() }
-    }
-
-    /// Translates a virtual address into a physical address.
-    pub fn translate(&self, virtual_addr: VirtualAddress) -> Option<PhysicalAddress> {
-        let off = virtual_addr % PAGE_SIZE;
-        self.translate_page(Page::get_page_at_address(virtual_addr))
-            .map(|frame| frame.index * PAGE_SIZE + off)
-    }
-
-    /// Translates a page into a frame.
-    fn translate_page(&self, page: Page) -> Option<Frame> {
-        use self::entry::HUGE_PAGE;
-        let p3 = self.p4().next_table(page.p4_index());
-        let huge_page = || unimplemented!();
-        p3.and_then(|p3| p3.next_table(page.p3_index()))
-            .and_then(|p2| p2.next_table(page.p2_index()))
-            .and_then(|p1| p1[page.p1_index()].frame())
-    }
-
-    /// Maps a page to a frame using the specified allocator.
-    pub fn map_to<A>(&mut self, page: Page, frame: Frame, flags: EntryFlags, allocator: &mut A)
-        where A: FrameAllocator
+    pub fn with<F>(&mut self,
+                   table: &mut InactivePageTable,
+                   temporary_page: &mut temp_page::TemporaryPage,
+                   f: F)
+        where F: FnOnce(&mut Mapper)
     {
-        let mut p3 = self.p4_mut().create_next_table(page.p4_index(), allocator);
-        let mut p2 = p3.create_next_table(page.p3_index(), allocator);
-        let mut p1 = p2.create_next_table(page.p2_index(), allocator);
-        assert!(p1[page.p1_index()].is_unused());
-        p1[page.p1_index()].set_flags(frame, flags | PRESENT);
-    }
-
-    /// Maps the next free page using the specified allocator.
-    pub fn map<A>(&mut self, page: Page, flags: EntryFlags, allocator: &mut A)
-        where A: FrameAllocator
-    {
-        let frame = allocator.alloc_frame().unwrap();
-        self.map_to(page, frame, flags, allocator)
-    }
-
-    /// Identity maps a frame using the specified allocator.
-    pub fn identitiy_map<A>(&mut self, frame: Frame, flags: EntryFlags, allocator: &mut A)
-        where A: FrameAllocator
-    {
-        let page = Page::get_page_at_address(frame.get_start_address());
-        self.map_to(page, frame, flags, allocator)
-    }
-
-    /// Unmaps a page using the specified allocator.
-    fn unmap<A>(&mut self, page: Page, allocator: &mut A)
-        where A: FrameAllocator
-    {
-        assert!(self.translate(page.address()).is_some());
-        let p1 = self.p4_mut()
-            .next_table_mut(page.p4_index())
-            .and_then(|p3| p3.next_table_mut(page.p3_index()))
-            .and_then(|p2| p2.next_table_mut(page.p2_index()))
-            .unwrap();
-        let frame = p1[page.p1_index()].frame().unwrap();
-        p1[page.p1_index()].mark_unused();
-        unsafe {
-            // Flush translation lookaside buffer
-            asm!("invlpg ($0)" :: "r" (page.address()) : "memory");
+        let flush_tlb = || unsafe {
+            // Invalidate the translation lookaside buffer
+            let cr3: usize;
+            asm!("mov %cr3, $0" : "=r" (cr3));
+            asm!("mov $0, %cr3" :: "r" (cr3) : "memory");
+        };
+        {
+            let backup = Frame::get_frame_for_address(unsafe {
+                let cr3: usize;
+                asm!("mov %cr3, $0" : "=r" (cr3));
+                cr3
+            });
+            let p4_table = temporary_page.map_table_frame(backup.clone(), self);
+            self.p4_mut()[511].set_flags(table.p4_frame.clone(), PRESENT | WRITABLE);
+            flush_tlb();
+            f(self);
+            p4_table[511].set_flags(backup, PRESENT | WRITABLE);
+            flush_tlb();
         }
-        allocator.dealloc_frame(frame);
+        temporary_page.unmap(self);
+    }
+}
+
+/// The `InactivePageTable` type.
+pub struct InactivePageTable {
+    /// The level 4 page frame.
+    p4_frame: Frame,
+}
+
+/// The `InactivePageTable` implementation.
+impl InactivePageTable {
+    /// Constructs a new `InactivePageTable`.
+    pub fn new(frame: Frame,
+               active_table: &mut ActivePageTable,
+               temporary_page: &mut TemporaryPage)
+               -> InactivePageTable {
+        {
+            let table = temporary_page.map_table_frame(frame.clone(), active_table);
+            table.zero_fill();
+            table[511].set_flags(frame.clone(), PRESENT | WRITABLE);
+        }
+        temporary_page.unmap(active_table);
+        InactivePageTable { p4_frame: frame }
     }
 }
 
 /// The `Page` type.
+#[derive(Debug, Copy, Clone)]
 pub struct Page {
     /// The index.
     index: usize,
