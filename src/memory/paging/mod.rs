@@ -96,6 +96,10 @@ impl ActivePageTable {
             .unwrap();
         let frame = p1[page.p1_index()].frame().unwrap();
         p1[page.p1_index()].mark_unused();
+        unsafe {
+            // Flush translation lookaside buffer
+            asm!("invlpg ($0)" :: "r" (page.address()) : "memory");
+        }
         allocator.dealloc_frame(frame);
     }
 }
